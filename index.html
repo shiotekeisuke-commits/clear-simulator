@@ -90,4 +90,196 @@
             transition: all 0.3s;
         }
 
-        .btn-create:hover { transform: translateY(-2px); box-shadow
+        .btn-create:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 153, 255, 0.4); }
+
+        /* --- 高級感のあるPOPデザイン --- */
+        .pop-container {
+            display: none;
+            margin-top: 40px;
+            position: relative;
+            background: var(--white);
+            border-radius: 30px;
+            padding: 45px 35px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+            overflow: hidden;
+            border: 1px solid var(--light-blue);
+        }
+
+        /* ロゴ背景を削除しました */
+
+        .pop-content { position: relative; z-index: 1; }
+
+        .pop-title {
+            font-size: 1.5em;
+            color: var(--dark-navy);
+            font-weight: 900;
+            margin-bottom: 30px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .pop-plan-list p {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 12px 5px;
+            font-size: 1em;
+            color: #333;
+        }
+
+        .pop-monthly-box {
+            margin-top: 35px;
+            background: linear-gradient(135deg, #00b4ff) 0%, #0081ff 100%);
+            color: var(--white);
+            padding: 30px 20px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 129, 255, 0.2);
+        }
+
+        .pop-monthly-label { font-size: 0.9em; opacity: 0.9; margin-bottom: 8px; font-weight: bold; }
+        .pop-monthly-price { font-size: 3.2em; font-weight: 800; line-height: 1; display: flex; align-items: baseline; justify-content: center; }
+        .pop-monthly-price span { font-size: 0.4em; margin-left: 8px; }
+
+        .pop-total-info {
+            margin-top: 20px;
+            font-size: 0.85em;
+            text-align: right;
+            color: #99aab5;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container" id="main-app">
+    <h1>MENS CLEAR<br><span style="font-size:0.7em; font-weight:normal; color:#888;">PRICE SIMULATOR</span></h1>
+    
+    <div id="plan-container">
+        </div>
+
+    <div class="payment-area">
+        <label style="font-size:0.9em; font-weight:bold; color:var(--dark-navy);">お支払い回数</label><br>
+        <select id="payment-times" style="width:100%; margin-top:10px;">
+            <option value="1">一括払い</option>
+            <option value="12">12回払い</option>
+            <option value="24">24回払い</option>
+            <option value="36">36回払い</option>
+            <option value="48">48回払い</option>
+            <option value="60">60回払い</option>
+            <option value="72">72回払い</option>
+            <option value="84">84回払い</option>
+            <option value="96">96回払い</option>
+        </select>
+    </div>
+
+    <button id="btn-create" class="btn-create">見積POPを生成する</button>
+
+    <div id="pop-container" class="pop-container">
+        <div class="pop-content">
+            <div class="pop-title">ESTIMATE</div>
+            <div id="pop-plan-list" class="pop-plan-list"></div>
+            <div class="pop-monthly-box">
+                <div class="pop-monthly-label" id="pop-monthly-label">月々のお支払い</div>
+                <div class="pop-monthly-price" id="pop-monthly-price">0<span>円(税込)〜</span></div>
+            </div>
+            <div class="pop-total-info" id="pop-note"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// データベース
+const planData = {
+    "ヒゲ3部位": { "3": 7800, "6": 50000, "12": 90000 },
+    "ヒゲ全体": { "6": 68000, "12": 122400 },
+    "全身（VIO・ヒゲ除く）": { "3": 90000, "6": 171000, "12": 324000 },
+    "VIO（尻含む）": { "3": 40000, "6": 76000, "12": 144000 },
+    "腕セット": { "3": 42000, "6": 79800, "12": 151200 },
+    "足セット": { "3": 42000, "6": 79800, "12": 151200 },
+    "胸": { "3": 22000, "6": 41800, "12": 79200 },
+    "腹": { "3": 22000, "6": 41800, "12": 79200 },
+    "背中": { "3": 22000, "6": 41800, "12": 79200 },
+    "二の腕": { "3": 22000, "6": 41800, "12": 79200 },
+    "両脇": { "3": 22000, "6": 41800, "12": 79200 },
+    "ひじ下": { "3": 22000, "6": 41800, "12": 79200 },
+    "手の甲指": { "3": 22000, "6": 41800, "12": 79200 },
+    "ひざ上": { "3": 22000, "6": 41800, "12": 79200 },
+    "ひざ下": { "3": 22000, "6": 41800, "12": 79200 },
+    "足の甲指": { "3": 22000, "6": 41800, "12": 79200 },
+    "Vライン": { "3": 22000, "6": 41800, "12": 79200 },
+    "Iライン": { "3": 22000, "6": 41800, "12": 79200 },
+    "Oライン": { "3": 22000, "6": 41800, "12": 79200 },
+    "お尻": { "3": 22000, "6": 41800, "12": 79200 }
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+    const container = document.getElementById("plan-container");
+    const paymentSelect = document.getElementById('payment-times');
+    const btnCreate = document.getElementById('btn-create');
+    const popContainer = document.getElementById('pop-container');
+
+    for(let i = 0; i < 5; i++) {
+        const div = document.createElement("div");
+        div.className = "plan-item";
+        div.innerHTML = `
+            <select class="plan-name-select"><option value="">プランを選択</option>${Object.keys(planData).map(k=>`<option value="${k}">${k}</option>`).join('')}</select>
+            <select class="plan-times-select" disabled><option value="0">回数</option></select>
+            <div class="plan-price" data-price="0">0円</div>
+        `;
+        
+        const nSel = div.querySelector('.plan-name-select');
+        const tSel = div.querySelector('.plan-times-select');
+        const pDiv = div.querySelector('.plan-price');
+
+        nSel.addEventListener("change", (e) => {
+            const val = e.target.value;
+            tSel.innerHTML = `<option value="0">回数</option>`;
+            if (val) {
+                tSel.disabled = false;
+                Object.keys(planData[val]).forEach(t => tSel.innerHTML += `<option value="${planData[val][t]}" data-t="${t}">${t}回</option>`);
+            } else { tSel.disabled = true; }
+            pDiv.textContent = "0円"; pDiv.dataset.price = "0";
+        });
+
+        tSel.addEventListener("change", (e) => {
+            const price = parseInt(e.target.value) || 0;
+            pDiv.textContent = price.toLocaleString() + "円";
+            pDiv.dataset.price = price;
+        });
+        container.appendChild(div);
+    }
+
+    btnCreate.addEventListener('click', () => {
+        let total = 0;
+        document.querySelectorAll('.plan-price').forEach(d => total += parseInt(d.dataset.price));
+        if (total === 0) return alert("プランを選択してください");
+
+        const times = parseInt(paymentSelect.value);
+        const addOnRate = 0.008; // 0.8%
+        const fee = times === 1 ? 0 : total * addOnRate * times;
+        const totalPay = total + fee;
+        const monthly = Math.floor(totalPay / times);
+
+        const list = document.getElementById('pop-plan-list');
+        list.innerHTML = '';
+        document.querySelectorAll('.plan-item').forEach(item => {
+            const n = item.querySelector('.plan-name-select').value;
+            const t = item.querySelector('.plan-times-select');
+            if(n && t.value !== "0") {
+                const p = document.createElement('p');
+                p.innerHTML = `<span>${n} (${t.options[t.selectedIndex].dataset.t}回)</span><span>${parseInt(t.value).toLocaleString()}円</span>`;
+                list.appendChild(p);
+            }
+        });
+
+        document.getElementById('pop-monthly-price').innerHTML = `${monthly.toLocaleString()}<span>円(税込)〜</span>`;
+        document.getElementById('pop-note').innerHTML = times === 1 ? `合計金額: ${total.toLocaleString()}円` : `プラン合計: ${total.toLocaleString()}円<br>総支払額(手数料込): ${totalPay.toLocaleString()}円`;
+        
+        popContainer.style.display = 'block';
+        popContainer.scrollIntoView({ behavior: 'smooth' });
+    });
+});
+</script>
+</body>
+</html>
