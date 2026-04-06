@@ -76,6 +76,25 @@
             text-align: center;
         }
 
+        /* 手入力用フィールドのデザイン */
+        .payment-input-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        #payment-times {
+            width: 80px;
+            padding: 10px;
+            font-size: 1.2em;
+            text-align: center;
+            border: 2px solid var(--brand-blue);
+            border-radius: 10px;
+            outline: none;
+        }
+
         .btn-create {
             width: 100%;
             padding: 20px;
@@ -105,8 +124,6 @@
             border: 1px solid var(--light-blue);
         }
 
-        /* ロゴ背景を削除しました */
-
         .pop-content { position: relative; z-index: 1; }
 
         .pop-title {
@@ -129,7 +146,7 @@
 
         .pop-monthly-box {
             margin-top: 35px;
-            background: linear-gradient(135deg, #00b4ff) 0%, #0081ff 100%);
+            background: linear-gradient(135deg, #00b4ff 0%, #0081ff 100%); /* エラーを修正しました */
             color: var(--white);
             padding: 30px 20px;
             border-radius: 20px;
@@ -159,18 +176,11 @@
         </div>
 
     <div class="payment-area">
-        <label style="font-size:0.9em; font-weight:bold; color:var(--dark-navy);">お支払い回数</label><br>
-        <select id="payment-times" style="width:100%; margin-top:10px;">
-            <option value="1">一括払い</option>
-            <option value="12">12回払い</option>
-            <option value="24">24回払い</option>
-            <option value="36">36回払い</option>
-            <option value="48">48回払い</option>
-            <option value="60">60回払い</option>
-            <option value="72">72回払い</option>
-            <option value="84">84回払い</option>
-            <option value="96">96回払い</option>
-        </select>
+        <label style="font-size:0.9em; font-weight:bold; color:var(--dark-navy);">お支払い回数（1〜48回）</label><br>
+        <div class="payment-input-wrapper">
+            <input type="number" id="payment-times" min="1" max="48" value="1">
+            <span style="font-weight:bold;">回払い</span>
+        </div>
     </div>
 
     <button id="btn-create" class="btn-create">見積POPを生成する</button>
@@ -215,7 +225,7 @@ const planData = {
 
 document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("plan-container");
-    const paymentSelect = document.getElementById('payment-times');
+    const paymentInput = document.getElementById('payment-times');
     const btnCreate = document.getElementById('btn-create');
     const popContainer = document.getElementById('pop-container');
 
@@ -255,7 +265,16 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll('.plan-price').forEach(d => total += parseInt(d.dataset.price));
         if (total === 0) return alert("プランを選択してください");
 
-        const times = parseInt(paymentSelect.value);
+        // 入力された回数の取得とバリデーション
+        let times = parseInt(paymentInput.value);
+        if (isNaN(times) || times < 1) {
+            times = 1;
+            paymentInput.value = 1;
+        } else if (times > 48) {
+            alert("分割回数は1〜48回の間で入力してください。");
+            return;
+        }
+
         const addOnRate = 0.008; // 0.8%
         const fee = times === 1 ? 0 : total * addOnRate * times;
         const totalPay = total + fee;
@@ -273,6 +292,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
+        const monthlyLabel = times === 1 ? "一括払い" : `${times}回払い (月々)`;
+        document.getElementById('pop-monthly-label').textContent = monthlyLabel;
         document.getElementById('pop-monthly-price').innerHTML = `${monthly.toLocaleString()}<span>円(税込)〜</span>`;
         document.getElementById('pop-note').innerHTML = times === 1 ? `合計金額: ${total.toLocaleString()}円` : `プラン合計: ${total.toLocaleString()}円<br>総支払額(手数料込): ${totalPay.toLocaleString()}円`;
         
